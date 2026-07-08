@@ -157,6 +157,41 @@
     .section-header h2 { font-size: 1.25rem; font-weight: 700; color: var(--dark); }
     .section-header .count { font-size: 0.78rem; color: var(--mid-gray); }
 
+    /* FEATURED SECTION */
+    .featured-section {
+      background: linear-gradient(135deg, #FFF9EC 0%, #FFF5E0 100%);
+      border: 1px solid #F0DDA8;
+      border-radius: 10px;
+      padding: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .featured-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .featured-star { font-size: 1.2rem; }
+
+    .featured-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--dark);
+      letter-spacing: 0.02em;
+    }
+
+    .featured-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .featured-card {
+      border: 2px solid var(--gold);
+    }
+
     /* PRODUCT GRID */
     .product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
 
@@ -239,6 +274,7 @@
     @media (max-width: 900px) {
       nav, .filter-bar, main, .hero, footer { padding-left: 1.5rem; padding-right: 1.5rem; }
       .product-grid { grid-template-columns: repeat(2, 1fr); }
+      .featured-grid { grid-template-columns: repeat(2, 1fr); }
       .hero { flex-direction: column; gap: 2rem; padding: 3rem 1.5rem; text-align: center; }
       .hero-trust { justify-content: center; }
     }
@@ -246,6 +282,7 @@
       nav { padding: 0 1rem; }
       .nav-links { display: none; }
       .product-grid { grid-template-columns: 1fr; }
+      .featured-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -283,6 +320,8 @@
   </div>
 
   <main>
+    <div id="featured-section"></div>
+
     <div class="disclosure">
       <strong>Affiliate Disclosure:</strong> My Kool Products participates in affiliate advertising programs, including the Amazon Associates Program. As an Amazon Associate, we earn from qualifying purchases. If you click an affiliate link and make a purchase, we may receive a commission at no additional cost to you. We only recommend products we genuinely believe provide value.
     </div>
@@ -319,10 +358,10 @@
 
     /* Sample fallback data so the page works before you connect a sheet */
     const SAMPLE_DATA = [
-      { Name: "Plaud Note Pro AI Voice Recorder", Price: "From $99.99", Image: "", Link: "https://amzn.to/3SaSiXu", Category: "Tech", Description: "Transcribe and summarize meetings and calls automatically.", Rating: "4.6", Badge: "Best Seller" },
-      { Name: "Presto FryDaddy Deep Fryer", Price: "From $34.99", Image: "", Link: "https://amzn.to/3FPdkVO", Category: "Kitchen", Description: "Compact deep fryer perfect for small kitchens.", Rating: "4.6", Badge: "Amazon's Choice" },
-      { Name: "Zevo Flying Insect Trap", Price: "From $19.99", Image: "", Link: "https://amzn.to/3TcCTmL", Category: "Home", Description: "Plug-in indoor fly and bug trap with zero mess.", Rating: "4.3", Badge: "Amazon's Choice" },
-      { Name: "Fit Simplify Resistance Bands", Price: "From $16.99", Image: "", Link: "https://amzn.to/3QDJCsm", Category: "Fitness", Description: "Complete home gym kit with bands, handles, and anchor.", Rating: "4.6", Badge: "Amazon's Choice" }
+      { Name: "Plaud Note Pro AI Voice Recorder", Price: "From $99.99", Image: "", Link: "https://amzn.to/3SaSiXu", Category: "Tech", Description: "Transcribe and summarize meetings and calls automatically.", Rating: "4.6", Badge: "Best Seller", Featured: "Yes" },
+      { Name: "Presto FryDaddy Deep Fryer", Price: "From $34.99", Image: "", Link: "https://amzn.to/3FPdkVO", Category: "Kitchen", Description: "Compact deep fryer perfect for small kitchens.", Rating: "4.6", Badge: "Amazon's Choice", Featured: "" },
+      { Name: "Zevo Flying Insect Trap", Price: "From $19.99", Image: "", Link: "https://amzn.to/3TcCTmL", Category: "Home", Description: "Plug-in indoor fly and bug trap with zero mess.", Rating: "4.3", Badge: "Amazon's Choice", Featured: "" },
+      { Name: "Fit Simplify Resistance Bands", Price: "From $16.99", Image: "", Link: "https://amzn.to/3QDJCsm", Category: "Fitness", Description: "Complete home gym kit with bands, handles, and anchor.", Rating: "4.6", Badge: "Amazon's Choice", Featured: "" }
     ];
 
     let allProducts = [];
@@ -414,9 +453,28 @@
       });
     }
 
+    function renderFeatured(products) {
+      const featuredWrap = document.getElementById('featured-section');
+      const featured = products.filter(p => (p.Featured || '').trim().toLowerCase() === 'yes');
+      if (featured.length === 0) {
+        featuredWrap.innerHTML = '';
+        return;
+      }
+      const cards = featured.map(p => buildCard(p).replace('class="product-card"', 'class="product-card featured-card"')).join('');
+      featuredWrap.innerHTML = `
+        <div class="featured-section">
+          <div class="featured-header">
+            <span class="featured-star">⭐</span>
+            <span class="featured-title">Featured Right Now</span>
+          </div>
+          <div class="featured-grid">${cards}</div>
+        </div>`;
+    }
+
     function initStore(products) {
       allProducts = products.filter(p => p.Name && p.Link);
       buildFilters(allProducts);
+      renderFeatured(allProducts);
       renderGrid(allProducts, 'All Picks', allProducts.length);
     }
 
