@@ -105,34 +105,60 @@
 
     /* FILTER BAR */
     .filter-bar {
-      background: var(--white);
+      background: var(--off-white);
       border-bottom: 2px solid var(--border);
-      padding: 0 4rem;
-      display: flex;
-      gap: 0;
-      overflow-x: auto;
+      padding: 1.1rem 4rem;
       position: sticky;
       top: 68px;
       z-index: 90;
-      scrollbar-width: none;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
     }
-    .filter-bar::-webkit-scrollbar { display: none; }
 
-    .filter-btn {
-      padding: 1rem 1.3rem;
-      font-size: 0.82rem;
-      font-weight: 500;
-      white-space: nowrap;
-      background: none;
-      border: none;
-      border-bottom: 3px solid transparent;
+    .filter-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
       color: var(--mid-gray);
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s;
-      margin-bottom: -2px;
+      white-space: nowrap;
     }
-    .filter-btn:hover { color: var(--dark); }
-    .filter-btn.active { color: var(--dark); border-bottom-color: var(--gold); font-weight: 600; }
+
+    .filter-select-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .filter-select {
+      appearance: none;
+      -webkit-appearance: none;
+      background: var(--white);
+      border: 1.5px solid var(--dark);
+      color: var(--dark);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 0.6rem 2.4rem 0.6rem 1.1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      min-width: 200px;
+      transition: background 0.2s;
+    }
+
+    .filter-select:hover { background: var(--off-white); }
+    .filter-select:focus { outline: none; box-shadow: 0 0 0 3px rgba(0,0,0,0.1); }
+
+    .filter-select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--dark);
+      font-size: 0.9rem;
+    }
 
     /* MAIN */
     main { max-width: 1200px; margin: 0 auto; padding: 3rem 4rem; min-height: 40vh; }
@@ -283,6 +309,7 @@
       .nav-links { display: none; }
       .product-grid { grid-template-columns: 1fr; }
       .featured-grid { grid-template-columns: 1fr; }
+      .filter-select { min-width: 160px; }
     }
   </style>
 </head>
@@ -315,8 +342,13 @@
     </div>
   </header>
 
-  <div class="filter-bar" id="filter-bar">
-    <button class="filter-btn active" data-cat="all">All Picks</button>
+  <div class="filter-bar">
+    <span class="filter-label">Browse:</span>
+    <div class="filter-select-wrap">
+      <select class="filter-select" id="filter-select">
+        <option value="all">All Picks</option>
+      </select>
+    </div>
   </div>
 
   <main>
@@ -411,24 +443,27 @@
       const catSet = new Set();
       products.forEach(p => { if (p.Category) catSet.add(p.Category.trim()); });
 
-      const filterBar = document.getElementById('filter-bar');
+      const select = document.getElementById('filter-select');
       const navLinks = document.getElementById('nav-links');
       const footerLinks = document.getElementById('footer-links');
 
-      filterBar.innerHTML = `<button class="filter-btn active" data-cat="all">All Picks</button>`;
+      select.innerHTML = `<option value="all">All Picks</option>`;
       navLinks.innerHTML = `<li><a href="#" data-cat="all">All</a></li>`;
       footerLinks.innerHTML = `<li><a href="#" data-cat="all">All</a></li>`;
 
       [...catSet].sort().forEach(cat => {
         const slug = slugify(cat);
-        filterBar.innerHTML += `<button class="filter-btn" data-cat="${slug}" data-label="${cat}">${cat}</button>`;
+        const opt = document.createElement('option');
+        opt.value = slug;
+        opt.dataset.label = cat;
+        opt.textContent = cat;
+        select.appendChild(opt);
         navLinks.innerHTML += `<li><a href="#" data-cat="${slug}" data-label="${cat}">${cat}</a></li>`;
         footerLinks.innerHTML += `<li><a href="#" data-cat="${slug}" data-label="${cat}">${cat}</a></li>`;
       });
 
       function handleFilterClick(cat, label) {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll(`.filter-btn[data-cat="${cat}"]`).forEach(b => b.classList.add('active'));
+        select.value = cat;
         if (cat === 'all') {
           renderGrid(allProducts, 'All Picks', allProducts.length);
         } else {
@@ -438,9 +473,9 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
-      filterBar.addEventListener('click', (e) => {
-        if (!e.target.classList.contains('filter-btn')) return;
-        handleFilterClick(e.target.dataset.cat, e.target.dataset.label);
+      select.addEventListener('change', (e) => {
+        const selectedOption = e.target.options[e.target.selectedIndex];
+        handleFilterClick(selectedOption.value, selectedOption.dataset.label);
       });
 
       [navLinks, footerLinks].forEach(el => {
